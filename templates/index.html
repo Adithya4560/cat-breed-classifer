@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Breed Classifier - AI-Powered Cat Recognition</title>
+    <meta name="description" content="Identify your cat's breed using advanced AI technology. Upload a photo and get instant breed classification with detailed information.">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/static/cat-icon.png">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <div class="logo">
+                    <span class="logo-icon">🐱</span>
+                    <span class="logo-text">CatBreed AI</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+                    <li><a href="#breeds" class="nav-link">Breeds</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                </ul>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section id="home" class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">Discover Your Cat's Breed</h1>
+                    <p class="hero-subtitle">Upload a photo and let our AI technology identify your cat's breed with professional accuracy and detailed insights.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="classifier-section">
+            <div class="container">
+                <div class="classifier-card">
+                    <div class="upload-section">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-content">
+                                <div class="upload-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7,10 12,15 17,10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </div>
+                                <h3 class="upload-title">Upload Your Cat's Photo</h3>
+                                <p class="upload-text">Drag and drop or click to select</p>
+                                <p class="upload-subtext">Supports JPG, PNG, JPEG up to 10MB</p>
+                            </div>
+                            <input type="file" id="fileInput" accept="image/*" class="file-input">
+                        </div>
+
+                        <div class="preview-container" id="previewContainer">
+                            <div class="preview-image-wrapper">
+                                <img id="imagePreview" alt="Cat preview" class="preview-image">
+                                <button class="remove-image" id="removeImage" title="Remove image">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="classify-btn" id="classifyBtn" disabled>
+                            <span class="btn-text">Classify My Cat</span>
+                            <span class="btn-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="loading-gif">
+                            <img src="/static/assets/cat-walking.gif" alt="Loading...">
+                        </div>
+                        
+                        <h3 class="loading-title">Analyzing your image...</h3>
+                        <p class="loading-text">Our AI is working hard to classify your cat!</p>
+                    </div>
+
+                    <div id="result" class="result-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="how-it-works">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Upload Photo</h3>
+                            <p>Upload a clear photo of your cat for best results</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>AI Analysis</h3>
+                            <p>Our advanced AI analyzes facial features and body characteristics</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Get Results</h3>
+                            <p>Receive detailed breed information and confidence scores</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="breeds" class="breeds-section">
+            <div class="container">
+                <h2 class="section-title">Supported Breeds</h2>
+                <p class="section-subtitle">Our AI can identify over 12 different cat breeds with high accuracy</p>
+                <div class="breeds-grid">
+                    <div class="breed-card">
+                        <h3>Persian</h3>
+                        <p>Long-haired breed with distinctive flat face</p>
+                    </div>
+                    <div class="breed-card">
+                        <h3>Maine Coon</h3>
+                        <p>Large, long-haired breed with tufted ears</p>
+                    </div>
+                    <div class="breed-card">
+                        <h3>Siamese</h3>
+                        <p>Distinctive color points and blue eyes</p>
+                    </div>
+                    <div class="breed-card">
+                        <h3>British Shorthair</h3>
+                        <p>Round face with dense, plush coat</p>
+                    </div>
+                    <div class="breed-card">
+                        <h3>Bengal</h3>
+                        <p>Wild-looking spotted or marbled pattern</p>
+                    </div>
+                    <div class="breed-card">
+                        <h3>Ragdoll</h3>
+                        <p>Large, docile breed with blue eyes</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <span class="logo-icon">🐱</span>
+                        <span class="logo-text">CatBreed AI</span>
+                    </div>
+                    <p>Advanced AI-powered cat breed identification</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#breeds">Breeds</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 CatBreed AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Cat Breed Classifier - Main JavaScript
+class CatClassifier {
+    constructor() {
+        this.selectedFile = null;
+        this.isProcessing = false;
+        
+        this.initializeElements();
+        this.attachEventListeners();
+        this.initializeNavigation();
+    }
+
+    initializeElements() {
+        // Upload elements
+        this.uploadArea = document.getElementById('uploadArea');
+        this.fileInput = document.getElementById('fileInput');
+        this.previewContainer = document.getElementById('previewContainer');
+        this.imagePreview = document.getElementById('imagePreview');
+        this.removeImageBtn = document.getElementById('removeImage');
+        this.classifyBtn = document.getElementById('classifyBtn');
+        
+        // Result elements
+        this.loading = document.getElementById('loading');
+        this.result = document.getElementById('result');
+        
+        // Navigation elements
+        this.mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        this.navLinks = document.querySelectorAll('.nav-link');
+    }
+
+    attachEventListeners() {
+        // File upload listeners
+        this.uploadArea.addEventListener('click', () => this.fileInput.click());
+        this.uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+        this.uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        this.uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+        this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+        
+        // Image preview listeners
+        this.removeImageBtn.addEventListener('click', this.removeImage.bind(this));
+        
+        // Classification listener
+        this.classifyBtn.addEventListener('click', this.classifyImage.bind(this));
+        
+        // Mobile menu toggle
+        this.mobileMenuToggle.addEventListener('click', this.toggleMobileMenu.bind(this));
+    }
+
+    initializeNavigation() {
+        // Smooth scrolling for navigation links
+        this.navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                
+                // Update active nav link
+                this.updateActiveNavLink(link);
+            });
+        });
+
+        // Update active nav link on scroll
+        window.addEventListener('scroll', this.updateActiveNavOnScroll.bind(this));
+    }
+
+    updateActiveNavLink(activeLink) {
+        this.navLinks.forEach(link => link.classList.remove('active'));
+        activeLink.classList.add('active');
+    }
+
+    updateActiveNavOnScroll() {
+        const sections = document.querySelectorAll('section[id]');
+        const scrollPosition = window.scrollY + 100;
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                const activeLink = document.querySelector(`a[href="#${sectionId}"]`);
+                if (activeLink) {
+                    this.updateActiveNavLink(activeLink);
+                }
+            }
+        });
+    }
+
+    toggleMobileMenu() {
+        // Implementation for mobile menu toggle
+        console.log('Mobile menu toggle clicked');
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        this.uploadArea.classList.add('dragover');
+    }
+
+    handleDragLeave(e) {
+        e.preventDefault();
+        this.uploadArea.classList.remove('dragover');
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        this.uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            this.handleFile(files[0]);
+        }
+    }
+
+    handleFileSelect(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            this.handleFile(files[0]);
+        }
+    }
+
+    handleFile(file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.showErrorMessage('Please select an image file (JPG, PNG, or JPEG)');
+            return;
+        }
+
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            this.showErrorMessage('File size must be less than 10MB');
+            return;
+        }
+
+        this.selectedFile = file;
+        this.displayImagePreview(file);
+    }
+
+    displayImagePreview(file) {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            this.imagePreview.src = e.target.result;
+            this.previewContainer.style.display = 'block';
+            this.previewContainer.classList.add('animate-fade-in');
+            this.classifyBtn.disabled = false;
+            
+            // Hide upload area
+            this.uploadArea.style.display = 'none';
+        };
+        
+        reader.readAsDataURL(file);
+    }
+
+    removeImage() {
+        this.selectedFile = null;
+        this.previewContainer.style.display = 'none';
+        this.uploadArea.style.display = 'block';
+        this.classifyBtn.disabled = true;
+        this.fileInput.value = '';
+        this.result.innerHTML = '';
+    }
+
+    async classifyImage() {
+        if (!this.selectedFile || this.isProcessing) return;
+
+        this.isProcessing = true;
+        this.showLoading();
+        this.classifyBtn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('file', this.selectedFile);
+
+            const response = await fetch('/classify-cat', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            this.displayResult(data);
+        } catch (error) {
+            console.error('Classification error:', error);
+            this.showErrorMessage(`Classification failed: ${error.message}`);
+        } finally {
+            this.hideLoading();
+            this.classifyBtn.disabled = false;
+            this.isProcessing = false;
+        }
+    }
+
+    showLoading() {
+        this.loading.style.display = 'block';
+        this.result.innerHTML = '';
+    }
+
+    hideLoading() {
+        this.loading.style.display = 'none';
+    }
+
+    displayResult(data) {
+        if (!data.is_cat) {
+            this.displayNotCatResult(data);
+            return;
+        }
+
+        this.displayCatResult(data);
+    }
+
+    displayNotCatResult(data) {
+        const resultHTML = `
+            <div class="result-card not-cat animate-fade-in">
+                <div class="result-title">🚫 Not a Cat Detected</div>
+                <p class="confidence">Detection confidence: ${data.cat_confidence}%</p>
+                <div class="not-cat-message">
+                    <p>Our AI didn't detect a cat in this image. Please upload a clear photo of a cat for breed classification.</p>
+                </div>
+                <button class="retry-btn" onclick="catClassifier.removeImage()">
+                    Try Another Image
+                </button>
+            </div>
+        `;
+        
+        this.result.innerHTML = resultHTML;
+        this.scrollToResult();
+    }
+
+    displayCatResult(data) {
+        let resultHTML = `
+            <div class="result-card cat animate-fade-in">
+                <div class="result-title">✅ Cat Detected!</div>
+                <p class="confidence">Detection confidence: ${data.cat_confidence}%</p>
+            </div>
+            <div class="breed-info animate-fade-in">
+                <h3 class="breed-title">🏆 ${this.formatBreedName(data.top_breed)}</h3>
+                <p class="confidence">Confidence: ${data.top_confidence}%</p>
+                
+                <div class="breed-explanation">
+                    <h4>About the ${this.formatBreedName(data.top_breed)}</h4>
+                    <p>${data.top_breed_explanation}</p>
+                </div>
+        `;
+
+        // Add VLM description if available
+        if (data.vlm_description) {
+            if (data.vlm_description.success) {
+                resultHTML += `
+                    <div class="vlm-description">
+                        <h4>🔍 Image Analysis</h4>
+                        <p>${data.vlm_description.description}</p>
+                    </div>
+                `;
+            } else {
+                resultHTML += `
+                    <div class="vlm-description error">
+                        <h4>⚠️ Analysis Error</h4>
+                        <p>${data.vlm_description.error}</p>
+                        <button class="retry-btn" onclick="catClassifier.retryVlmDescription()">
+                            Retry Analysis
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Add breed predictions
+        resultHTML += `
+                <h4>📊 Top Breed Predictions</h4>
+                <div class="breed-predictions">
+        `;
+
+        data.breed_predictions.forEach((pred, index) => {
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+            resultHTML += `
+                <div class="prediction-item">
+                    <span class="breed-name">${medal} ${this.formatBreedName(pred.breed)}</span>
+                    <span class="breed-confidence">${pred.confidence}%</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${pred.confidence}%"></div>
+                </div>
+                <div class="breed-explanation">
+                    <p>${pred.explanation}</p>
+                </div>
+            `;
+        });
+
+        resultHTML += `
+                </div>
+                <button class="retry-btn" onclick="catClassifier.removeImage()" style="margin-top: 2rem;">
+                    Classify Another Cat
+                </button>
+            </div>
+        `;
+
+        this.result.innerHTML = resultHTML;
+        this.scrollToResult();
+        this.animateConfidenceBars();
+    }
+
+    async retryVlmDescription() {
+        if (!this.selectedFile) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('file', this.selectedFile);
+
+            const response = await fetch('/vlm-describe', {
+                method: 'POST',
+                body: formData
+            });
+
+            const vlmData = await response.json();
+            
+            if (vlmData.success) {
+                const vlmDiv = document.querySelector('.vlm-description');
+                vlmDiv.classList.remove('error');
+                vlmDiv.innerHTML = `
+                    <h4>🔍 Image Analysis</h4>
+                    <p>${vlmData.description}</p>
+                `;
+            } else {
+                throw new Error(vlmData.error);
+            }
+        } catch (error) {
+            console.error('VLM retry error:', error);
+            const vlmDiv = document.querySelector('.vlm-description');
+            vlmDiv.innerHTML = `
+                <h4>⚠️ Analysis Error</h4>
+                <p>Failed to analyze image: ${error.message}</p>
+                <button class="retry-btn" onclick="catClassifier.retryVlmDescription()">
+                    Retry Analysis
+                </button>
+            `;
+        }
+    }
+
+    formatBreedName(breedName) {
+        return breedName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    animateConfidenceBars() {
+        setTimeout(() => {
+            const bars = document.querySelectorAll('.confidence-fill');
+            bars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }, 300);
+    }
+
+    scrollToResult() {
+        setTimeout(() => {
+            this.result.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 100);
+    }
+
+    showErrorMessage(message) {
+        const errorHTML = `
+            <div class="error-message animate-fade-in">
+                <h3>❌ Error</h3>
+                <p>${message}</p>
+                <button class="retry-btn" onclick="catClassifier.removeImage()">
+                    Try Again
+                </button>
+            </div>
+        `;
+        
+        this.result.innerHTML = errorHTML;
+        this.scrollToResult();
+    }
+}
+
+// Utility functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize the cat classifier
+    window.catClassifier = new CatClassifier();
+    
+    // Add smooth scrolling for all internal links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Add intersection observer for animations
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Observe elements for animation
+    document.querySelectorAll('.step, .breed-card, .stat').forEach(el => {
+        observer.observe(el);
+    });
+    
+    // Add loading states to external links
+    document.querySelectorAll('a[href^="http"]').forEach(link => {
+        link.addEventListener('click', () => {
+            link.style.opacity = '0.7';
+            setTimeout(() => {
+                link.style.opacity = '1';
+            }, 1000);
+        });
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', debounce(() => {
+    // Handle any resize-specific logic here
+    if (window.innerWidth > 768) {
+        // Reset mobile menu state if needed
+        document.body.classList.remove('mobile-menu-open');
+    }
+}, 250));
+
+// Handle page visibility change
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Pause any ongoing processes if needed
+        console.log('Page hidden - pausing processes');
+    } else {
+        // Resume processes
+        console.log('Page visible - resuming processes');
+    }
+});
+
+// Service Worker registration (for PWA capabilities)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registered successfully');
+            })
+            .catch(error => {
+                console.log('ServiceWorker registration failed');
+            });
+    });
+}
+    </script>
+</body>
+</html>

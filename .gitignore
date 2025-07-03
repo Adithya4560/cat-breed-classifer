@@ -1,0 +1,17 @@
+__pycache__
+*.py[cod]
+
+*.pth
+
+.qodo
+
+.vscode/
+*.code-workspace
+
+.DS_Store
+
+ignore-files/
+
+asplit_it/
+cats_only/
+dataset/
