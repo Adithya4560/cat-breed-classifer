@@ -14,6 +14,8 @@ import requests
 from typing import Dict, Any
 import logging
 import re
+import os
+from dotenv import load_dotenv
 
 
 # Configure logging for debugging
@@ -26,7 +28,8 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # DeepSeek API configuration (via OpenRouter)
-DEEPSEEK_API_KEY = "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"
+load_dotenv()
+DEEPSEEK_API_KEY=os.getenv("api_key")
 DEEPSEEK_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 @app.get("/", response_class=HTMLResponse)

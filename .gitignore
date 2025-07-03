@@ -15,3 +15,5 @@ ignore-files/
 asplit_it/
 cats_only/
 dataset/
+
+.env
