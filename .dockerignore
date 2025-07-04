@@ -1,0 +1,6 @@
+echo "__pycache__" > .dockerignore
+echo "*.pyc" >> .dockerignore
+echo ".git" >> .dockerignore
+echo "README.md" >> .dockerignore
+echo ".gitignore" >> .dockerignore
+
