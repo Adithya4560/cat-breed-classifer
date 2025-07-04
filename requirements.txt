@@ -1,4 +1,4 @@
-﻿# Core Web Framework
+# Core Web Framework
 Flask==3.0.3
 Flask-Login==0.6.3
 Flask-SQLAlchemy==3.1.1
@@ -21,9 +21,10 @@ scikit-learn==1.6.1
 
 # API & Requests
 requests==2.32.3
-fastapi==0.114.1
+fastapi==0.115.5
 uvicorn==0.30.6
-python-multipart==0.0.9
+python-multipart==0.0.18
+starlette==0.40.0
 
 # Utilities
 python-dotenv==1.1.1
@@ -36,7 +37,7 @@ Jinja2==3.1.4
 itsdangerous==2.2.0
 click==8.1.7
 MarkupSafe==2.1.5
-greenlet==3.0.3
+greenlet==3.2.3
 certifi==2024.8.30
 charset-normalizer==3.4.0
 idna==3.8
@@ -46,3 +47,6 @@ typing_extensions==4.12.2
 packaging==24.1
 setuptools==74.0.0
 wheel==0.45.1
+
+# Additional packages that might be needed
+gevent==25.5.1
