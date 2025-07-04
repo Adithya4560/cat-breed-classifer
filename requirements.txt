@@ -6,7 +6,7 @@ gunicorn==23.0.0
 Werkzeug==3.0.4
 
 # PyTorch (CPU version for deployment)
-torch==2.5.1
+torch==2.7.1
 torchvision==0.22.1
 numpy==2.1.1
 
