@@ -1,34 +1,56 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+# Multi-stage build to reduce final image size
+FROM python:3.11-slim as builder
 
-# Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies
+# Install only essential build dependencies
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements first (for better caching)
-COPY requirements.txt .
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Upgrade pip and install wheel for faster builds
+RUN pip install --no-cache-dir --upgrade pip wheel
 
 # Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY . .
+# Production stage - use even smaller base image
+FROM python:3.11-slim
 
-# Expose port
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Set environment variables for optimization
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV TORCH_DISABLE_WARNINGS=1
+
+WORKDIR /app
+
+# Copy application files (in order of change frequency)
+COPY *.pth .
+COPY templates/ templates/
+COPY static/ static/
+COPY main.py .
+
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' appuser && chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 8000
 
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "main:app"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

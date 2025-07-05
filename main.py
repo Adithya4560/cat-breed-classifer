@@ -152,7 +152,7 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
                     ]
                 }
             ],
-            "max_tokens": 500
+            "max_tokens": 1500
         }
 
         logger.info(f"Sending request to OpenRouter API with payload: {json.dumps(payload)}")
@@ -278,5 +278,6 @@ async def get_supported_breeds():
     return {"breeds": breeds_with_explanations, "total_breeds": len(CAT_BREEDS)}
 
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.environ.get('PORT', 8000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    uvicorn.run(app, host='0.0.0.0', port=port)
