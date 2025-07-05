@@ -152,11 +152,11 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
                     ]
                 }
             ],
-            "max_tokens": 1500
+            "max_tokens": 300
         }
 
         logger.info(f"Sending request to OpenRouter API with payload: {json.dumps(payload)}")
-        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=30)
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=15)
         response.raise_for_status()  # Raise an exception for 4xx/5xx errors
 
         response_data = response.json()
