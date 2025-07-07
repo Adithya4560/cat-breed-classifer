@@ -139,9 +139,9 @@ async def test_api_key_validity():
             "Content-Type": "application/json"
         }
         
-        # Test with a simple text-only request
+        # Test with DeepSeek R1 (confirmed working with new API key)
         payload = {
-            "model": "meta-llama/llama-3.2-3b-instruct:free",
+            "model": "deepseek/deepseek-r1",
             "messages": [{"role": "user", "content": "Hello"}],
             "max_tokens": 5
         }
@@ -204,9 +204,9 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
             "Content-Type": "application/json"
         }
 
-        # Try with a free model first for image analysis
+        # Use DeepSeek R1 for image analysis (confirmed working)
         payload = {
-            "model": "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "model": "deepseek/deepseek-r1",
             "messages": [
                 {
                     "role": "user",
@@ -216,7 +216,7 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
                     ]
                 }
             ],
-            "max_tokens": 200
+            "max_tokens": 300
         }
 
         logger.info(f"Sending request to OpenRouter API")
