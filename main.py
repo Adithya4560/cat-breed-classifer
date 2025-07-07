@@ -298,38 +298,14 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
                     "content": [
                         {
                             "type": "text",
-                            "text": """Please provide a detailed description of this cat image. Include:
+                            "text": """Please describe this cat image in a concise paragraph, covering:
 
-Physical Appearance:
-- Overall size and build
-- Face shape and features
-- Body proportions
+- Size and build
+- Face and coat characteristics
+- Any distinctive features
 
-Coat Details:
-- Color(s) and patterns
-- Texture and length
-- Any distinctive markings
+Keep it clear and brief without markdown formatting."""
 
-Facial Features:
-- Eye color and shape
-- Ear size and position
-- Nose and mouth characteristics
-
-Distinctive Features:
-- Tail characteristics
-- Paw details
-- Any unique markings or features
-
-Pose and Expression:
-- Current pose or position
-- Facial expression
-- Overall demeanor
-
-Environment:
-- Setting or background
-- Any relevant context
-
-Please write in clear, descriptive sentences without markdown formatting."""
                         },
                         {"type": "image_url", "image_url": {"url": image_uri}}
                     ]
