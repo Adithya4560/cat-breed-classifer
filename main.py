@@ -29,8 +29,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # DeepSeek API configuration (via OpenRouter)
 load_dotenv()
-DEEPSEEK_API_KEY=os.getenv("api_key")
+DEEPSEEK_API_KEY = os.getenv("api_key")
 DEEPSEEK_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+# Initialize VLM_ENABLED flag
+VLM_ENABLED = False
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_home(request: Request):
@@ -98,7 +101,8 @@ breed_transform = transforms.Compose([
                          std=[0.229, 0.224, 0.225])
 ])
 
-def clean_description(text:str) ->  str:
+def clean_description(text: str) -> str:
+    """Clean VLM description text by removing markdown formatting"""
     if not text:
         return text 
     text = re.sub(r'\*{2,}', '', text)  # Remove ** and more
@@ -120,49 +124,47 @@ def clean_description(text:str) ->  str:
     
     return text
 
-# Global variable to track API key validity
-VLM_ENABLED = True
-
-async def test_api_key_validity():
-    """Test if the API key is valid by making a small request"""
+async def test_api_key_validity() -> bool:
+    """Test if the API key is valid"""
     global VLM_ENABLED
     
-    if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "YOUR_API_KEY_HERE":
-        VLM_ENABLED = False
-        return False
-    
     try:
+        if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "YOUR_API_KEY_HERE":
+            logger.warning("API key not configured")
+            VLM_ENABLED = False
+            return False
+        
+        # Create a simple test request
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "HTTP-Referer": "http://localhost:8000",
             "X-Title": "Cat Breed Classifier",
             "Content-Type": "application/json"
         }
-        
-        # Test with DeepSeek R1 (confirmed working with new API key)
+
         payload = {
             "model": "deepseek/deepseek-r1",
-            "messages": [{"role": "user", "content": "Hello"}],
+            "messages": [{"role": "user", "content": "Test message"}],
             "max_tokens": 5
         }
-        
+
         response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=10)
         
-        if response.status_code == 401:
-            logger.warning("API key is invalid or expired - disabling VLM features")
+        if response.status_code == 200:
+            VLM_ENABLED = True
+            logger.info("API key validation successful")
+            return True
+        elif response.status_code == 401:
+            logger.error("API key validation failed - unauthorized")
             VLM_ENABLED = False
             return False
-        elif response.status_code == 200:
-            logger.info("API key validated successfully")
-            VLM_ENABLED = True
-            return True
         else:
-            logger.warning(f"API key test returned status {response.status_code} - disabling VLM features")
+            logger.warning(f"API key validation returned status {response.status_code}")
             VLM_ENABLED = False
             return False
             
     except Exception as e:
-        logger.warning(f"API key validation failed: {e} - disabling VLM features")
+        logger.error(f"API key validation error: {str(e)}")
         VLM_ENABLED = False
         return False
 
@@ -208,7 +210,7 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
             "Content-Type": "application/json"
         }
 
-        # Use DeepSeek R1 for image analysis (confirmed working)
+        # Use DeepSeek R1 for image analysis
         payload = {
             "model": "deepseek/deepseek-r1",
             "messages": [
@@ -274,6 +276,7 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"VLM processing error: {str(e)}")
         return {"success": False, "error": f"VLM processing error: {str(e)}"}
+
 @app.post("/classify-cat")
 async def classify_cat(file: UploadFile = File(...)):
     try:
