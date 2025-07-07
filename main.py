@@ -170,12 +170,16 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
     """Get image description from DeepSeek R1 via OpenRouter API"""
     global VLM_ENABLED
     
-    # Check if VLM is enabled
+    # Check if VLM is enabled - but don't fail permanently, try to re-enable
     if not VLM_ENABLED:
-        return {
-            "success": False, 
-            "error": "Image analysis is temporarily unavailable. The API key may be invalid or expired. Please contact the administrator."
-        }
+        # Try to re-validate API key
+        logger.info("VLM was disabled, attempting to re-validate API key...")
+        api_valid = await test_api_key_validity()
+        if not api_valid:
+            return {
+                "success": False, 
+                "error": "Image analysis is temporarily unavailable. The API key may be invalid or expired. Please contact the administrator."
+            }
     
     try:
         # Check if API key is configured
@@ -240,7 +244,12 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
         raw_description = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No description provided")
         
         # Clean the description before returning
-        clean_desc = clean_description(raw_description)
+        clean_desc = clean_description(raw_description) if raw_description else ""
+        
+        # If description is empty or too short, provide a fallback
+        if not clean_desc or len(clean_desc.strip()) < 10:
+            logger.warning("VLM returned empty or very short description")
+            clean_desc = "The AI was unable to generate a detailed description of this image. The image analysis feature is working, but may need optimization for better results."
         
         return {"success": True, "description": clean_desc}
 
@@ -250,12 +259,15 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
             try:
                 error_detail = e.response.json().get('error', {}).get('message', 'Unknown error')
                 error_msg += f" - {error_detail}"
-                # If authentication error, disable VLM
-                if 'auth' in error_detail.lower() or 'credential' in error_detail.lower():
+                # Only disable VLM on definitive authentication errors
+                if 'auth' in error_detail.lower() or 'credential' in error_detail.lower() or 'unauthorized' in error_detail.lower():
+                    logger.warning("Authentication error detected - temporarily disabling VLM")
                     VLM_ENABLED = False
             except:
                 error_msg += f" - Status: {e.response.status_code}"
+                # Only disable on 401 (auth) errors, not other errors
                 if e.response.status_code == 401:
+                    logger.warning("401 error detected - temporarily disabling VLM")
                     VLM_ENABLED = False
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
@@ -373,6 +385,22 @@ async def get_vlm_status():
         "vlm_enabled": VLM_ENABLED,
         "message": "Image analysis is available" if VLM_ENABLED else "Image analysis is temporarily unavailable",
         "reason": "API key is valid" if VLM_ENABLED else "API key is invalid or expired"
+    }
+
+@app.post("/vlm-reset")
+async def reset_vlm_status():
+    """Reset VLM status and re-test API key (for debugging)"""
+    global VLM_ENABLED
+    logger.info("Manual VLM reset requested")
+    
+    # Re-test API key
+    api_valid = await test_api_key_validity()
+    
+    return {
+        "success": True,
+        "vlm_enabled": VLM_ENABLED,
+        "message": "VLM status reset and re-tested",
+        "api_test_result": "valid" if api_valid else "invalid"
     }
 
 @app.on_event("startup")

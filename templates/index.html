@@ -524,6 +524,17 @@ class CatClassifier {
         if (!this.selectedFile) return;
 
         try {
+            // First, try to reset VLM status
+            const resetResponse = await fetch('/vlm-reset', {
+                method: 'POST'
+            });
+            
+            if (resetResponse.ok) {
+                const resetData = await resetResponse.json();
+                console.log('VLM reset result:', resetData);
+            }
+
+            // Now try the VLM description
             const formData = new FormData();
             formData.append('file', this.selectedFile);
 
@@ -556,6 +567,9 @@ class CatClassifier {
                     </button>
                     <button class="help-btn" onclick="catClassifier.showVlmHelp()">
                         ❓ Need Help?
+                    </button>
+                    <button class="reset-btn" onclick="catClassifier.resetVlmStatus()">
+                        🔄 Reset System
                     </button>
                 </div>
             `;
@@ -631,6 +645,31 @@ class CatClassifier {
         }
     }
 
+    async resetVlmStatus() {
+        try {
+            const response = await fetch('/vlm-reset', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`VLM Status Reset:\n\nVLM Enabled: ${data.vlm_enabled}\nAPI Test: ${data.api_test_result}\n\nYou can now try the analysis again.`);
+                
+                // Update local status
+                this.vlmEnabled = data.vlm_enabled;
+                
+                // Update status notification if present
+                this.checkVlmStatus();
+            } else {
+                alert('Failed to reset VLM status. Please try again.');
+            }
+        } catch (error) {
+            console.error('Failed to reset VLM status:', error);
+            alert('Failed to reset VLM status. Please check the console for details.');
+        }
+    }
+
     showVlmHelp() {
         const helpMessage = `
             The AI image analysis feature provides detailed descriptions of your cat's appearance.\n\n
@@ -638,7 +677,8 @@ class CatClassifier {
             • API key not configured or invalid\n
             • Network connectivity problems\n
             • Service temporarily unavailable\n\n
-            The breed classification will still work without this feature.
+            The breed classification will still work without this feature.\n\n
+            Try using the "Reset System" button to re-validate the API key.
         `;
         alert(helpMessage);
     }
