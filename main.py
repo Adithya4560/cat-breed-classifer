@@ -71,13 +71,13 @@ BREED_EXPLANATIONS = {
 }
 
 # Load cat/not-cat model first
-cat_detector = models.mobilenet_v2(pretrained=False)
+cat_detector = models.mobilenet_v2(weights=None)
 cat_detector.classifier[1] = nn.Linear(cat_detector.last_channel, 2)
 cat_detector.load_state_dict(torch.load("cat_notcat_model.pth", map_location=device))
 cat_detector.eval().to(device)
 
 # Load breed classifier model (EfficientNetB0)
-breed_classifier = models.efficientnet_b0(pretrained=False)
+breed_classifier = models.efficientnet_b0(weights=None)
 breed_classifier.classifier[1] = nn.Linear(breed_classifier.classifier[1].in_features, len(CAT_BREEDS))
 breed_classifier.load_state_dict(torch.load("best_efficientnet_b0.pth", map_location=device))
 breed_classifier.eval().to(device)
@@ -123,6 +123,11 @@ def clean_description(text:str) ->  str:
 async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
     """Get image description from DeepSeek R1 via OpenRouter API"""
     try:
+        # Check if API key is configured
+        if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "YOUR_API_KEY_HERE":
+            logger.warning("VLM API key not configured")
+            return {"success": False, "error": "VLM API key not configured. Please set your OpenRouter API key in the .env file."}
+        
         # Detect image format
         img = Image.open(io.BytesIO(image_data))
         img_format = img.format.lower() if img.format else 'jpeg'
@@ -155,12 +160,20 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
             "max_tokens": 300
         }
 
-        logger.info(f"Sending request to OpenRouter API with payload: {json.dumps(payload)}")
-        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=15)
-        response.raise_for_status()  # Raise an exception for 4xx/5xx errors
+        logger.info(f"Sending request to OpenRouter API")
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=30)
+        
+        if response.status_code == 401:
+            logger.error("Authentication failed - check API key")
+            return {"success": False, "error": "Authentication failed. Please check your OpenRouter API key."}
+        elif response.status_code == 429:
+            logger.error("Rate limit exceeded")
+            return {"success": False, "error": "Rate limit exceeded. Please try again later."}
+        
+        response.raise_for_status()  # Raise an exception for other 4xx/5xx errors
 
         response_data = response.json()
-        logger.info(f"API response: {json.dumps(response_data)}")
+        logger.info(f"API response received successfully")
         raw_description = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No description provided")
         
         # Clean the description before returning
@@ -169,8 +182,15 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
         return {"success": True, "description": clean_desc}
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"OpenRouter API error: {str(e)} - Response: {getattr(e.response, 'text', 'No response')}")
-        return {"success": False, "error": f"OpenRouter API error: {str(e)} - {getattr(e.response, 'text', 'No response')}"}
+        error_msg = f"API request failed: {str(e)}"
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                error_detail = e.response.json().get('error', {}).get('message', 'Unknown error')
+                error_msg += f" - {error_detail}"
+            except:
+                error_msg += f" - Status: {e.response.status_code}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
     except Exception as e:
         logger.error(f"VLM processing error: {str(e)}")
         return {"success": False, "error": f"VLM processing error: {str(e)}"}

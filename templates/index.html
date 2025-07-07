@@ -453,21 +453,34 @@ class CatClassifier {
             if (data.vlm_description.success) {
                 resultHTML += `
                     <div class="vlm-description">
-                        <h4>🔍 Image Analysis</h4>
+                        <h4>🔍 AI Image Analysis</h4>
                         <p>${data.vlm_description.description}</p>
                     </div>
                 `;
             } else {
+                console.warn('VLM Analysis failed:', data.vlm_description.error);
                 resultHTML += `
                     <div class="vlm-description error">
-                        <h4>⚠️ Analysis Error</h4>
-                        <p>${data.vlm_description.error}</p>
-                        <button class="retry-btn" onclick="catClassifier.retryVlmDescription()">
-                            Retry Analysis
-                        </button>
+                        <h4>⚠️ Image Analysis Unavailable</h4>
+                        <p class="error-details">${data.vlm_description.error}</p>
+                        <div class="error-actions">
+                            <button class="retry-btn" onclick="catClassifier.retryVlmDescription()">
+                                🔄 Retry Analysis
+                            </button>
+                            <button class="help-btn" onclick="catClassifier.showVlmHelp()">
+                                ❓ Need Help?
+                            </button>
+                        </div>
                     </div>
                 `;
             }
+        } else {
+            resultHTML += `
+                <div class="vlm-description warning">
+                    <h4>ℹ️ Image Analysis</h4>
+                    <p>Detailed image analysis is not available at the moment.</p>
+                </div>
+            `;
         }
 
         // Add breed predictions
@@ -523,7 +536,7 @@ class CatClassifier {
                 const vlmDiv = document.querySelector('.vlm-description');
                 vlmDiv.classList.remove('error');
                 vlmDiv.innerHTML = `
-                    <h4>🔍 Image Analysis</h4>
+                    <h4>🔍 AI Image Analysis</h4>
                     <p>${vlmData.description}</p>
                 `;
             } else {
@@ -535,11 +548,28 @@ class CatClassifier {
             vlmDiv.innerHTML = `
                 <h4>⚠️ Analysis Error</h4>
                 <p>Failed to analyze image: ${error.message}</p>
-                <button class="retry-btn" onclick="catClassifier.retryVlmDescription()">
-                    Retry Analysis
-                </button>
+                <div class="error-actions">
+                    <button class="retry-btn" onclick="catClassifier.retryVlmDescription()">
+                        🔄 Retry Analysis
+                    </button>
+                    <button class="help-btn" onclick="catClassifier.showVlmHelp()">
+                        ❓ Need Help?
+                    </button>
+                </div>
             `;
         }
+    }
+
+    showVlmHelp() {
+        const helpMessage = `
+            The AI image analysis feature provides detailed descriptions of your cat's appearance.\n\n
+            Common issues:\n
+            • API key not configured or invalid\n
+            • Network connectivity problems\n
+            • Service temporarily unavailable\n\n
+            The breed classification will still work without this feature.
+        `;
+        alert(helpMessage);
     }
 
     formatBreedName(breedName) {
