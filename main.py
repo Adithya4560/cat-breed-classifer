@@ -120,12 +120,68 @@ def clean_description(text:str) ->  str:
     
     return text
 
+# Global variable to track API key validity
+VLM_ENABLED = True
+
+async def test_api_key_validity():
+    """Test if the API key is valid by making a small request"""
+    global VLM_ENABLED
+    
+    if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "YOUR_API_KEY_HERE":
+        VLM_ENABLED = False
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "HTTP-Referer": "http://localhost:8000",
+            "X-Title": "Cat Breed Classifier",
+            "Content-Type": "application/json"
+        }
+        
+        # Test with a simple text-only request
+        payload = {
+            "model": "meta-llama/llama-3.2-3b-instruct:free",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "max_tokens": 5
+        }
+        
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=10)
+        
+        if response.status_code == 401:
+            logger.warning("API key is invalid or expired - disabling VLM features")
+            VLM_ENABLED = False
+            return False
+        elif response.status_code == 200:
+            logger.info("API key validated successfully")
+            VLM_ENABLED = True
+            return True
+        else:
+            logger.warning(f"API key test returned status {response.status_code} - disabling VLM features")
+            VLM_ENABLED = False
+            return False
+            
+    except Exception as e:
+        logger.warning(f"API key validation failed: {e} - disabling VLM features")
+        VLM_ENABLED = False
+        return False
+
 async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
     """Get image description from DeepSeek R1 via OpenRouter API"""
+    global VLM_ENABLED
+    
+    # Check if VLM is enabled
+    if not VLM_ENABLED:
+        return {
+            "success": False, 
+            "error": "Image analysis is temporarily unavailable. The API key may be invalid or expired. Please contact the administrator."
+        }
+    
     try:
         # Check if API key is configured
         if not DEEPSEEK_API_KEY or DEEPSEEK_API_KEY == "YOUR_API_KEY_HERE":
             logger.warning("VLM API key not configured")
+            VLM_ENABLED = False
             return {"success": False, "error": "VLM API key not configured. Please set your OpenRouter API key in the .env file."}
         
         # Detect image format
@@ -143,11 +199,14 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
 
         headers = {
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "HTTP-Referer": "http://localhost:8000",
+            "X-Title": "Cat Breed Classifier",
             "Content-Type": "application/json"
         }
 
+        # Try with a free model first for image analysis
         payload = {
-            "model": "deepseek/deepseek-r1",
+            "model": "meta-llama/llama-3.2-11b-vision-instruct:free",
             "messages": [
                 {
                     "role": "user",
@@ -157,18 +216,22 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
                     ]
                 }
             ],
-            "max_tokens": 300
+            "max_tokens": 200
         }
 
         logger.info(f"Sending request to OpenRouter API")
         response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=30)
         
         if response.status_code == 401:
-            logger.error("Authentication failed - check API key")
-            return {"success": False, "error": "Authentication failed. Please check your OpenRouter API key."}
+            logger.error("Authentication failed - disabling VLM")
+            VLM_ENABLED = False
+            return {"success": False, "error": "Authentication failed. The API key appears to be invalid or expired."}
         elif response.status_code == 429:
             logger.error("Rate limit exceeded")
             return {"success": False, "error": "Rate limit exceeded. Please try again later."}
+        elif response.status_code == 402:
+            logger.error("Payment required - trying fallback")
+            return {"success": False, "error": "API quota exceeded. Image analysis is temporarily unavailable."}
         
         response.raise_for_status()  # Raise an exception for other 4xx/5xx errors
 
@@ -187,8 +250,13 @@ async def get_vlm_description(image_data: bytes) -> Dict[str, Any]:
             try:
                 error_detail = e.response.json().get('error', {}).get('message', 'Unknown error')
                 error_msg += f" - {error_detail}"
+                # If authentication error, disable VLM
+                if 'auth' in error_detail.lower() or 'credential' in error_detail.lower():
+                    VLM_ENABLED = False
             except:
                 error_msg += f" - Status: {e.response.status_code}"
+                if e.response.status_code == 401:
+                    VLM_ENABLED = False
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
     except Exception as e:
@@ -296,6 +364,31 @@ async def get_supported_breeds():
         for breed in CAT_BREEDS
     ]
     return {"breeds": breeds_with_explanations, "total_breeds": len(CAT_BREEDS)}
+
+@app.get("/vlm-status")
+async def get_vlm_status():
+    """Return the status of VLM (Vision Language Model) functionality"""
+    global VLM_ENABLED
+    return {
+        "vlm_enabled": VLM_ENABLED,
+        "message": "Image analysis is available" if VLM_ENABLED else "Image analysis is temporarily unavailable",
+        "reason": "API key is valid" if VLM_ENABLED else "API key is invalid or expired"
+    }
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the application and test API key validity"""
+    logger.info("Starting Cat Breed Classifier...")
+    
+    # Test API key validity
+    api_valid = await test_api_key_validity()
+    if api_valid:
+        logger.info("✅ VLM features enabled - API key is valid")
+    else:
+        logger.warning("⚠️ VLM features disabled - API key is invalid or expired")
+        logger.warning("   Breed classification will still work normally")
+    
+    logger.info("Cat Breed Classifier startup complete!")
 
 if __name__ == "__main__":
     import uvicorn

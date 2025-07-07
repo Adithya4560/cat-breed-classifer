@@ -196,10 +196,12 @@ class CatClassifier {
     constructor() {
         this.selectedFile = null;
         this.isProcessing = false;
+        this.vlmEnabled = true; // Will be updated after checking status
         
         this.initializeElements();
         this.attachEventListeners();
         this.initializeNavigation();
+        this.checkVlmStatus();
     }
 
     initializeElements() {
@@ -557,6 +559,75 @@ class CatClassifier {
                     </button>
                 </div>
             `;
+        }
+    }
+
+    async checkVlmStatus() {
+        try {
+            const response = await fetch('/vlm-status');
+            const data = await response.json();
+            this.vlmEnabled = data.vlm_enabled;
+            
+            if (!this.vlmEnabled) {
+                console.warn('VLM disabled:', data.reason);
+                // Show a subtle notification that image analysis is unavailable
+                this.showVlmStatusNotification(data.message, data.reason);
+            }
+        } catch (error) {
+            console.warn('Could not check VLM status:', error);
+            this.vlmEnabled = false;
+        }
+    }
+
+    showVlmStatusNotification(message, reason) {
+        // Create a subtle notification banner
+        const notification = document.createElement('div');
+        notification.className = 'vlm-status-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">ℹ️</span>
+                <span class="notification-text">${message}</span>
+                <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
+        
+        // Add CSS if not already added
+        if (!document.querySelector('#vlm-notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'vlm-notification-styles';
+            style.textContent = `
+                .vlm-status-notification {
+                    background: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    border-radius: 8px;
+                    padding: 0.75rem;
+                    margin: 1rem 0;
+                    font-size: 0.9rem;
+                }
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+                .notification-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.2rem;
+                    cursor: pointer;
+                    margin-left: auto;
+                    opacity: 0.7;
+                }
+                .notification-close:hover {
+                    opacity: 1;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Insert the notification after the classifier card
+        const classifierCard = document.querySelector('.classifier-card');
+        if (classifierCard && classifierCard.parentNode) {
+            classifierCard.parentNode.insertBefore(notification, classifierCard.nextSibling);
         }
     }
 
